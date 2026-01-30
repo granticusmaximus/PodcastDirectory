@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import type { QueueItem } from '../types/podcast';
+import { getApiUrl } from '../services/api';
 import './Queue.css';
 
 interface QueueProps {
@@ -84,7 +85,7 @@ const Queue: React.FC<QueueProps> = ({ isOpen, onClose }) => {
   const loadQueue = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/api/queue/1'); // TODO: Use actual user ID
+      const response = await fetch(getApiUrl('/queue/1')); // TODO: Use actual user ID
       const data = await response.json();
       setQueueItems(data);
     } catch (err) {
@@ -111,7 +112,7 @@ const Queue: React.FC<QueueProps> = ({ isOpen, onClose }) => {
 
   const saveQueueOrder = async (items: QueueItem[]) => {
     try {
-      await fetch('http://localhost:3001/api/queue/reorder', {
+      await fetch(getApiUrl('/queue/reorder'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -126,7 +127,7 @@ const Queue: React.FC<QueueProps> = ({ isOpen, onClose }) => {
 
   const handleRemove = async (itemId: number) => {
     try {
-      await fetch(`http://localhost:3001/api/queue/${itemId}`, {
+      await fetch(getApiUrl(`/queue/${itemId}`), {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: 1 }) // TODO: Use actual user ID
@@ -149,7 +150,7 @@ const Queue: React.FC<QueueProps> = ({ isOpen, onClose }) => {
     }
 
     try {
-      await fetch('http://localhost:3001/api/queue/clear', {
+      await fetch(getApiUrl('/queue/clear'), {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: 1 }) // TODO: Use actual user ID

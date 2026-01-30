@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Episode } from '../types/podcast';
+import { getApiUrl } from '../services/api';
 import './AudioPlayer.css';
 
 interface AudioPlayerProps {
@@ -27,7 +28,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ onQueueOpen }) => {
       // Fetch podcast details to get image
       if (episode.podcast_id) {
         try {
-          const response = await fetch(`http://localhost:3001/api/podcasts/${episode.podcast_id}`);
+          const response = await fetch(getApiUrl(`/podcasts/${episode.podcast_id}`));
           const podcast = await response.json();
           setPodcastImage(podcast.image_url || '');
         } catch (err) {
@@ -116,7 +117,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ onQueueOpen }) => {
 
   const saveProgress = async (episodeId: number, progress: number) => {
     try {
-      await fetch('http://localhost:3001/api/history', {
+      await fetch(getApiUrl('/history'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import './Auth.css';
+import { useNavigate, Link } from 'react-router-dom';import { getApiUrl } from '../services/api';import './Auth.css';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -41,7 +40,7 @@ const Register: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/register', {
+      const response = await fetch(getApiUrl('/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

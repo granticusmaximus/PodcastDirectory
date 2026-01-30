@@ -7,8 +7,12 @@ A React + TypeScript application for searching and cataloging podcasts with a lo
 - 🔍 Search for podcasts using the iTunes/Apple Podcasts API
 - 📚 Save podcasts to your local library
 - 🏷️ Filter podcasts by category (History, Comedy, True Crime, etc.)
+- 🎧 Audio player with queue management
+- 👤 User authentication and profiles
+- 🔐 Forgot password with email reset
 - 💾 SQLite database for persistent storage
 - 🎨 Clean, modern UI with responsive design
+- 🐳 Docker support with multi-stage builds
 
 ## Tech Stack
 

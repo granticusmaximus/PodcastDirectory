@@ -1,17 +1,29 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import { podcastDB, Podcast } from './database';
 import { episodeDB, queueDB, historyDB, userDB, favoriteDB } from './database-extended';
 import { parsePodcastFeed } from './rss-parser';
+import { sendPasswordResetEmail, verifyEmailConfig } from './email-service';
 import axios from 'axios';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-app.use(cors());
+// Configure CORS to allow requests from any origin in production
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' ? '*' : 'http://localhost:5173',
+    credentials: true
+}));
 app.use(express.json({ limit: '50mb' })); // Increased limit for base64 images
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -102,6 +114,92 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Login failed' });
+    }
+});
+
+// Forgot password endpoint
+app.post('/api/auth/forgot-password', async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        // Find user
+        const user = userDB.getByEmail(email);
+        if (!user) {
+            // For security, don't reveal if email exists
+            return res.json({ message: 'If that email exists, a password reset link has been sent.' });
+        }
+
+        // Generate unique reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 3600000); // 1 hour from now
+
+        // Store token in database
+        const db = (userDB as any).db; // Access the underlying database
+        const stmt = db.prepare(`
+            INSERT INTO password_reset_tokens (user_id, token, expires_at)
+            VALUES (?, ?, ?)
+        `);
+        stmt.run(user.id, resetToken, expiresAt.toISOString());
+
+        // Send email
+        const emailSent = await sendPasswordResetEmail(email, resetToken, user.username);
+
+        if (!emailSent) {
+            console.warn(`Email service unavailable. Reset token generated for user ${user.id}`);
+        }
+
+        res.json({ message: 'If that email exists, a password reset link has been sent.' });
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ error: 'Failed to process request' });
+    }
+});
+
+// Reset password endpoint
+app.post('/api/auth/reset-password', async (req: Request, res: Response) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({ error: 'Token and new password are required' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: 'Password must be at least 6 characters' });
+        }
+
+        // Find valid token
+        const db = (userDB as any).db;
+        const tokenRecord = db.prepare(`
+            SELECT * FROM password_reset_tokens
+            WHERE token = ? AND used = 0 AND expires_at > datetime('now')
+        `).get(token);
+
+        if (!tokenRecord) {
+            return res.status(400).json({ error: 'Invalid or expired reset token' });
+        }
+
+        // Hash new password
+        const password_hash = await bcrypt.hash(newPassword, 10);
+
+        // Update user password
+        db.prepare(`
+            UPDATE users SET password_hash = ? WHERE id = ?
+        `).run(password_hash, tokenRecord.user_id);
+
+        // Mark token as used
+        db.prepare(`
+            UPDATE password_reset_tokens SET used = 1 WHERE id = ?
+        `).run(tokenRecord.id);
+
+        res.json({ message: 'Password has been reset successfully' });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ error: 'Failed to reset password' });
     }
 });
 
@@ -494,6 +592,21 @@ app.get('/api/favorites/:userId/:podcastId/check', (req: Request, res: Response)
     }
 });
 
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../dist')));
+
+    // The "catchall" handler: for any request that doesn't
+    // match an API route, send back React's index.html file.
+    app.use((req: Request, res: Response, next) => {
+        if (req.path.startsWith('/api/')) {
+            return next();
+        }
+        res.sendFile(path.join(__dirname, '../dist/index.html'));
+    });
+}
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    verifyEmailConfig();
 });

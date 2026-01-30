@@ -7,6 +7,7 @@ import {
   TwitterIcon,
 } from 'react-share';
 import type { Podcast, Episode } from '../types/podcast';
+import { getApiUrl } from '../services/api';
 import './PodcastDetail.css';
 
 const PodcastDetail: React.FC = () => {
@@ -42,13 +43,13 @@ const PodcastDetail: React.FC = () => {
     setLoading(true);
     try {
       // Fetch podcast details
-      const podcastRes = await fetch(`http://localhost:3001/api/podcasts/${id}`);
+      const podcastRes = await fetch(getApiUrl(`/podcasts/${id}`));
       if (!podcastRes.ok) throw new Error('Failed to load podcast');
       const podcastData = await podcastRes.json();
       setPodcast(podcastData);
 
       // Fetch episodes
-      const episodesRes = await fetch(`http://localhost:3001/api/podcasts/${id}/episodes`);
+      const episodesRes = await fetch(getApiUrl(`/podcasts/${id}/episodes`));
       if (!episodesRes.ok) throw new Error('Failed to load episodes');
       const episodesData = await episodesRes.json();
       setEpisodes(episodesData);
@@ -63,7 +64,7 @@ const PodcastDetail: React.FC = () => {
   const checkIfFavorite = async () => {
     if (!user || !id) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/favorites/${user.id}/${id}/check`);
+      const res = await fetch(getApiUrl(`/favorites/${user.id}/${id}/check`));
       const data = await res.json();
       setIsFavorite(data.isFavorite);
     } catch (err) {
@@ -80,12 +81,12 @@ const PodcastDetail: React.FC = () => {
 
     try {
       if (isFavorite) {
-        await fetch(`http://localhost:3001/api/favorites/${user.id}/${id}`, {
+        await fetch(getApiUrl(`/favorites/${user.id}/${id}`), {
           method: 'DELETE'
         });
         setIsFavorite(false);
       } else {
-        await fetch('http://localhost:3001/api/favorites', {
+        await fetch(getApiUrl('/favorites'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user.id, podcastId: parseInt(id) })
@@ -101,7 +102,7 @@ const PodcastDetail: React.FC = () => {
   const handlePlayEpisode = async (episode: Episode) => {
     // Add to queue and play
     try {
-      await fetch('http://localhost:3001/api/queue', {
+      await fetch(getApiUrl('/queue'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ episodeId: episode.id, userId: 1 }) // TODO: Use actual user ID
@@ -115,7 +116,7 @@ const PodcastDetail: React.FC = () => {
 
   const handleAddToQueue = async (episode: Episode) => {
     try {
-      await fetch('http://localhost:3001/api/queue', {
+      await fetch(getApiUrl('/queue'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ episodeId: episode.id, userId: 1 }) // TODO: Use actual user ID

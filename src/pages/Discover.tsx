@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PodcastCard from '../components/PodcastCard';
-import { searchOnline, addPodcast } from '../services/api';
+import { searchOnline, addPodcast, getApiUrl } from '../services/api';
 import type { Podcast } from '../types/podcast';
 import './Discover.css';
 
@@ -14,7 +14,7 @@ const Browse: React.FC = () => {
   const navigate = useNavigate();
   const [allPodcasts, setAllPodcasts] = useState<Podcast[]>([]);
   const [filteredPodcasts, setFilteredPodcasts] = useState<Podcast[]>([]);
-  const [libraryPodcastIds, setLibraryPodcastIds] = useState<Set<number>>(new Set());
+  const [libraryPodcastIds, setLibraryPodcastIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -32,10 +32,10 @@ const Browse: React.FC = () => {
 
   const loadLibraryPodcasts = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/podcasts');
+      const response = await fetch(getApiUrl('/podcasts'));
       const podcasts: Podcast[] = await response.json();
       const itunesIds = new Set(
-        podcasts.map(p => p.itunes_id).filter((id): id is number => id !== null && id !== undefined)
+        podcasts.map(p => p.itunes_id).filter((id): id is string => id !== null && id !== undefined)
       );
       setLibraryPodcastIds(itunesIds);
     } catch (err) {

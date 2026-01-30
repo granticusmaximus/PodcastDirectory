@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Podcast, ListeningHistory, Episode } from '../types/podcast';
 import PodcastCard from '../components/PodcastCard';
+import { getApiUrl } from '../services/api';
 import './Profile.css';
 
 interface User {
@@ -26,7 +27,6 @@ const Profile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [favorites, setFavorites] = useState<Podcast[]>([]);
-  const [queueEpisodeIds, setQueueEpisodeIds] = useState<Set<number>>(new Set());
   const [listeningHistory, setListeningHistory] = useState<EnrichedListeningHistory[]>([]);
   const [activeTab, setActiveTab] = useState<'library' | 'favorites' | 'history'>('library');
   const [loading, setLoading] = useState(true);
@@ -72,23 +72,17 @@ const Profile: React.FC = () => {
     setLoading(true);
     try {
       // Load all podcasts in library
-      const podcastsResponse = await fetch('http://localhost:3001/api/podcasts');
+      const podcastsResponse = await fetch(getApiUrl('/podcasts'));
       const podcastsData = await podcastsResponse.json();
       setPodcasts(podcastsData);
 
       // Load favorites
-      const favResponse = await fetch(`http://localhost:3001/api/favorites/${userId}`);
+      const favResponse = await fetch(getApiUrl(`/favorites/${userId}`));
       const favData = await favResponse.json();
       setFavorites(favData);
 
-      // Load queue episodes
-      const queueResponse = await fetch(`http://localhost:3001/api/queue/${userId}`);
-      const queueData = await queueResponse.json();
-      const episodeIds = new Set(queueData.map((item: any) => item.episode_id));
-      setQueueEpisodeIds(episodeIds);
-
       // Load listening history
-      const historyResponse = await fetch(`http://localhost:3001/api/history/${userId}`);
+      const historyResponse = await fetch(getApiUrl(`/history/${userId}`));
       const historyData = await historyResponse.json();
       setListeningHistory(historyData);
     } catch (err) {
@@ -168,7 +162,7 @@ const Profile: React.FC = () => {
     if (!user) return;
 
     try {
-      const url = `http://localhost:3001/api/users/${user.id}`;
+      const url = getApiUrl(`/users/${user.id}`);
       console.log('Calling PUT:', url, 'with data:', editForm);
       
       const response = await fetch(url, {
@@ -219,7 +213,7 @@ const Profile: React.FC = () => {
 
     try {
       // Add to queue
-      await fetch('http://localhost:3001/api/queue', {
+      await fetch(getApiUrl('/queue'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ episodeId: item.episode.id, userId: user?.id || 1 })

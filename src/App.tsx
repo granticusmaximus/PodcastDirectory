@@ -5,6 +5,8 @@ import Discover from './pages/Discover'
 import PodcastDetail from './pages/PodcastDetail'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import Welcome from './pages/Welcome'
 import Profile from './pages/Profile'
 import AudioPlayer from './components/AudioPlayer'
@@ -82,6 +84,8 @@ function App() {
             <Route path="/podcast/:id" element={<PodcastDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>

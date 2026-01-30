@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import './Auth.css';
+import { useNavigate, Link } from 'react-router-dom';import { getApiUrl } from '../services/api';import './Auth.css';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -25,7 +24,7 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch(getApiUrl('/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -86,6 +85,11 @@ const Login: React.FC = () => {
               required
               autoComplete="current-password"
             />
+            <div style={{ textAlign: 'right', marginTop: '0.5rem' }}>
+              <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: '#667eea' }}>
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           <button type="submit" className="btn-primary" disabled={loading}>

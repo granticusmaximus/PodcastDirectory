@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import PodcastCard from '../components/PodcastCard';
-import { searchOnline, addPodcast } from '../services/api';
+import { searchOnline, addPodcast, getApiUrl } from '../services/api';
 import type { Podcast } from '../types/podcast';
 import './Search.css';
 
@@ -29,14 +29,14 @@ const Search: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [categoryData, setCategoryData] = useState<CategoryPodcasts[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
-  const [libraryPodcastIds, setLibraryPodcastIds] = useState<Set<number>>(new Set());
+  const [libraryPodcastIds, setLibraryPodcastIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const loadLibraryPodcasts = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/podcasts');
+        const response = await fetch(getApiUrl('/podcasts'));
         const podcasts: Podcast[] = await response.json();
-        const itunesIds = new Set(podcasts.map(p => p.itunes_id).filter((id): id is number => id !== null && id !== undefined));
+        const itunesIds = new Set(podcasts.map(p => p.itunes_id).filter((id): id is string => id !== null && id !== undefined));
         setLibraryPodcastIds(itunesIds);
       } catch (err) {
         console.error('Failed to load library podcasts:', err);

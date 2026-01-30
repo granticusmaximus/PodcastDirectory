@@ -1,7 +1,14 @@
 import axios from 'axios';
 import type { Podcast } from '../types/podcast';
 
-const API_URL = 'http://localhost:3001/api';
+// Use relative path in production, localhost in development
+const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api';
+
+// Helper to get full API URL for fetch calls
+export const getApiUrl = (path: string) => {
+    const baseUrl = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api';
+    return path.startsWith('/') ? `${baseUrl}${path}` : `${baseUrl}/${path}`;
+};
 
 export const searchOnline = async (term: string, limit = 20): Promise<Podcast[]> => {
     const response = await axios.get(`${API_URL}/search`, {
