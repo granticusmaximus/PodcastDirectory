@@ -119,6 +119,46 @@ npm run build
 
 The built files will be in the `dist` directory.
 
+## Docker Deployment
+
+Build and run using Docker:
+
+```bash
+./deploy.sh deploy
+```
+
+Or manually:
+
+```bash
+docker-compose up --build
+```
+
+The application will be available at http://localhost:5174
+
+## Email Configuration (Optional)
+
+The forgot password feature requires email configuration. Set these environment variables:
+
+```bash
+SMTP_HOST=smtp.gmail.com      # Your SMTP server
+SMTP_PORT=587                  # SMTP port (587 for TLS, 465 for SSL)
+SMTP_SECURE=false              # true for port 465, false for 587
+SMTP_USER=your-email@gmail.com # Your email address
+SMTP_PASS=your-app-password    # Your email password or app password
+FROM_EMAIL=noreply@yourapp.com # Sender email address
+APP_URL=https://your-domain.com # Your app URL for reset links
+```
+
+### Using Gmail
+
+1. Enable 2-factor authentication on your Google account
+2. Generate an "App Password" at https://myaccount.google.com/apppasswords
+3. Use the generated password for `SMTP_PASS`
+
+### Development Mode
+
+If email is not configured, password reset links will be logged to the console instead.
+
 ## License
 
 MIT
