@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { podcastDB, Podcast } from './database';
+import db, { podcastDB, Podcast } from './database';
 import { episodeDB, queueDB, historyDB, userDB, favoriteDB } from './database-extended';
 import { parsePodcastFeed } from './rss-parser';
 import { sendPasswordResetEmail, verifyEmailConfig } from './email-service';
@@ -138,7 +138,6 @@ app.post('/api/auth/forgot-password', async (req: Request, res: Response) => {
         const expiresAt = new Date(Date.now() + 3600000); // 1 hour from now
 
         // Store token in database
-        const db = (userDB as any).db; // Access the underlying database
         const stmt = db.prepare(`
             INSERT INTO password_reset_tokens (user_id, token, expires_at)
             VALUES (?, ?, ?)
@@ -173,7 +172,6 @@ app.post('/api/auth/reset-password', async (req: Request, res: Response) => {
         }
 
         // Find valid token
-        const db = (userDB as any).db;
         const tokenRecord = db.prepare(`
             SELECT * FROM password_reset_tokens
             WHERE token = ? AND used = 0 AND expires_at > datetime('now')

@@ -11,9 +11,8 @@ services:
       - "5174:3001"
     volumes:
       - podcast-data:/app/data
-    environment:
-      - NODE_ENV=production
-      - PORT=3001
+    env_file:
+      - .env
     networks:
       - podcast-network
     healthcheck:
